@@ -53,10 +53,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 exports.__esModule = true;
 var fast_express_1 = require("@karakulov-web-dev/fast-express");
 var voting_pay_get_user_id_by_access_token_1 = __importDefault(require("@karakulov-web-dev/voting-pay-get-user-id-by-access-token"));
+function SaveImg(base64Data) {
+    require("fs").writeFile(__dirname + "/../static/images/out.png", base64Data, "base64", function () { });
+}
 var ProfilesApi = /** @class */ (function (_super) {
     __extends(ProfilesApi, _super);
     function ProfilesApi(port, profiles) {
-        var _this = _super.call(this, port) || this;
+        var _this = _super.call(this, port, function (app) { return __awaiter(_this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                app.get("/static*", fast_express_1.express.static(__dirname + "/../"));
+                return [2 /*return*/];
+            });
+        }); }) || this;
         _this.profiles = profiles;
         return _this;
     }
@@ -170,6 +178,9 @@ var ProfilesApi = /** @class */ (function (_super) {
                             })];
                     case 2:
                         updateResult = _b.sent();
+                        if (body.data.img) {
+                            SaveImg(body.data.img.replace(/^data:image\/png;base64,/, ""));
+                        }
                         return [2 /*return*/, {
                                 error: false,
                                 errorText: "",

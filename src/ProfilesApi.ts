@@ -1,5 +1,6 @@
 import { FastExpress, express } from "@karakulov-web-dev/fast-express";
 import getUserIdByToken from "@karakulov-web-dev/voting-pay-get-user-id-by-access-token";
+import md5 from "md5";
 
 interface IReq extends express.Request {
   body: {
@@ -14,14 +15,27 @@ interface IUpdateReq extends IReq {
       profile: string;
       name: string;
       description: string;
+      img: string;
     };
   };
+}
+
+function SaveImg(base64Data: string) {
+  require("fs").writeFile(
+    __dirname + "/../static/images/out.png",
+    base64Data,
+    "base64",
+    function() {}
+  );
 }
 
 export default class ProfilesApi<T> extends FastExpress {
   private profiles: any;
   constructor(port: number, profiles: T) {
-    super(port);
+    super(port, async app => {
+      app.get("/static*", express.static(__dirname + `/../`));
+      return;
+    });
     this.profiles = profiles;
   }
   async get({ body }: IReq) {
@@ -105,6 +119,10 @@ export default class ProfilesApi<T> extends FastExpress {
         }
       }
     );
+
+    if (body.data.img) {
+      SaveImg(body.data.img.replace(/^data:image\/png;base64,/, ""));
+    }
 
     return {
       error: false,
