@@ -1,7 +1,5 @@
 import { FastExpress, express } from "@karakulov-web-dev/fast-express";
-import { MongoDbFacade } from "@karakulov-web-dev/mongo-db-facade";
 import getUserIdByToken from "@karakulov-web-dev/voting-pay-get-user-id-by-access-token";
-import axios from "axios";
 
 interface IReq extends express.Request {
   body: {
