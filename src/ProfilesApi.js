@@ -53,8 +53,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 exports.__esModule = true;
 var fast_express_1 = require("@karakulov-web-dev/fast-express");
 var voting_pay_get_user_id_by_access_token_1 = __importDefault(require("@karakulov-web-dev/voting-pay-get-user-id-by-access-token"));
+var md5_1 = __importDefault(require("md5"));
 function SaveImg(base64Data) {
-    require("fs").writeFile(__dirname + "/../static/images/out.png", base64Data, "base64", function () { });
+    var fileName = md5_1["default"](base64Data) + ".png";
+    require("fs").writeFile(__dirname + "/../static/images/" + fileName, base64Data, "base64", function () { });
+    return fileName;
 }
 var ProfilesApi = /** @class */ (function (_super) {
     __extends(ProfilesApi, _super);
@@ -149,7 +152,7 @@ var ProfilesApi = /** @class */ (function (_super) {
     ProfilesApi.prototype.update = function (_a) {
         var body = _a.body;
         return __awaiter(this, void 0, void 0, function () {
-            var userId, updateResult;
+            var userId, fileName, dbSetObj, updateResult;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -169,18 +172,25 @@ var ProfilesApi = /** @class */ (function (_super) {
                                     profiles: []
                                 }];
                         }
+                        if (body.data.img) {
+                            fileName = SaveImg(body.data.img.replace(/^data:image\/png;base64,/, ""));
+                        }
+                        else {
+                            fileName = "";
+                        }
+                        dbSetObj = {
+                            profile: body.data.profile || "",
+                            name: body.data.name || "",
+                            description: body.data.description || ""
+                        };
+                        if (fileName) {
+                            dbSetObj.img = "http://localhost/profile/static/images/" + fileName;
+                        }
                         return [4 /*yield*/, this.profiles.update({ userId: userId }, {
-                                $set: {
-                                    profile: body.data.profile || "",
-                                    name: body.data.name || "",
-                                    description: body.data.description || ""
-                                }
+                                $set: dbSetObj
                             })];
                     case 2:
                         updateResult = _b.sent();
-                        if (body.data.img) {
-                            SaveImg(body.data.img.replace(/^data:image\/png;base64,/, ""));
-                        }
                         return [2 /*return*/, {
                                 error: false,
                                 errorText: "",

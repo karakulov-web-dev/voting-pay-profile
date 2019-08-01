@@ -21,12 +21,14 @@ interface IUpdateReq extends IReq {
 }
 
 function SaveImg(base64Data: string) {
+  let fileName = `${md5(base64Data)}.png`;
   require("fs").writeFile(
-    __dirname + "/../static/images/out.png",
+    `${__dirname}/../static/images/${fileName}`,
     base64Data,
     "base64",
     function() {}
   );
+  return fileName;
 }
 
 export default class ProfilesApi<T> extends FastExpress {
@@ -109,20 +111,30 @@ export default class ProfilesApi<T> extends FastExpress {
       };
     }
 
+    if (body.data.img) {
+      var fileName = SaveImg(
+        body.data.img.replace(/^data:image\/png;base64,/, "")
+      );
+    } else {
+      fileName = "";
+    }
+
+    let dbSetObj: any = {
+      profile: body.data.profile || "",
+      name: body.data.name || "",
+      description: body.data.description || ""
+    };
+
+    if (fileName) {
+      dbSetObj.img = `http://localhost/profile/static/images/${fileName}`;
+    }
+
     let updateResult = await this.profiles.update(
       { userId },
       {
-        $set: {
-          profile: body.data.profile || "",
-          name: body.data.name || "",
-          description: body.data.description || ""
-        }
+        $set: dbSetObj
       }
     );
-
-    if (body.data.img) {
-      SaveImg(body.data.img.replace(/^data:image\/png;base64,/, ""));
-    }
 
     return {
       error: false,
