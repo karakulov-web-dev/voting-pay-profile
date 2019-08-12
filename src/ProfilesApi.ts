@@ -20,6 +20,12 @@ interface IUpdateReq extends IReq {
   };
 }
 
+interface IProfileReq {
+  body: {
+    profile: string;
+  };
+}
+
 function SaveImg(base64Data: string) {
   let fileName = `${md5(base64Data)}.png`;
   require("fs").writeFile(
@@ -58,10 +64,35 @@ export default class ProfilesApi<T> extends FastExpress {
       };
     }
 
+    let profiles = await this.profiles.get({ userId });
+    profiles = profiles.map((item: any) => {
+      item.img = item.img || `http://localhost/profile/static/images/image.png`;
+      return item;
+    });
+
     return {
       error: false,
       errorText: "",
-      profiles: await this.profiles.get({ userId })
+      profiles
+    };
+  }
+  async profile({ body }: IProfileReq) {
+    if (!body || !body.profile) {
+      return {
+        error: true,
+        errorText: "id профиля не задан!"
+      };
+    }
+    let { profile } = body;
+    let profiles = await this.profiles.get({ profile });
+    profiles = profiles.map((item: any) => {
+      item.img = item.img || `http://localhost/profile/static/images/image.png`;
+      return item;
+    });
+    return {
+      error: false,
+      errorText: "",
+      profiles
     };
   }
   async create({ body }: IReq) {
@@ -75,8 +106,7 @@ export default class ProfilesApi<T> extends FastExpress {
     if (!userId) {
       return {
         error: true,
-        errorText: "Ошибка при проверке AccessToken",
-        profiles: []
+        errorText: "Ошибка при проверке AccessToken"
       };
     }
 
@@ -91,7 +121,7 @@ export default class ProfilesApi<T> extends FastExpress {
     return {
       error: false,
       errorText: "",
-      result: await this.profiles.set([{ userId }])
+      result: await this.profiles.set([{ userId, profile: userId }])
     };
   }
   async update({ body }: IUpdateReq) {
@@ -106,8 +136,25 @@ export default class ProfilesApi<T> extends FastExpress {
     if (!userId) {
       return {
         error: true,
-        errorText: "Ошибка при проверке AccessToken",
-        profiles: []
+        errorText: "Ошибка при проверке AccessToken"
+      };
+    }
+
+    if (!body.data.profile) {
+      return {
+        error: true,
+        errorText: 'Поле "id Профиля" обязательно для заполнения!'
+      };
+    }
+
+    let profiles = await this.profiles.get({ profile: body.data.profile });
+    profiles = profiles.filter((item: any) => {
+      return !(item.userId === userId);
+    });
+    if (!profiles || !Array.isArray(profiles) || profiles.length) {
+      return {
+        error: true,
+        errorText: "Профиль с таким id уже существует!"
       };
     }
 
@@ -120,7 +167,7 @@ export default class ProfilesApi<T> extends FastExpress {
     }
 
     let dbSetObj: any = {
-      profile: body.data.profile || "",
+      profile: body.data.profile,
       name: body.data.name || "",
       description: body.data.description || ""
     };

@@ -74,9 +74,9 @@ var ProfilesApi = /** @class */ (function (_super) {
     ProfilesApi.prototype.get = function (_a) {
         var body = _a.body;
         return __awaiter(this, void 0, void 0, function () {
-            var userId, _b;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var userId, profiles;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         if (!body || !body.AccessToken) {
                             return [2 /*return*/, {
@@ -87,7 +87,7 @@ var ProfilesApi = /** @class */ (function (_super) {
                         }
                         return [4 /*yield*/, voting_pay_get_user_id_by_access_token_1["default"](body.AccessToken)];
                     case 1:
-                        userId = _c.sent();
+                        userId = _b.sent();
                         if (!userId) {
                             return [2 /*return*/, {
                                     error: true,
@@ -95,13 +95,48 @@ var ProfilesApi = /** @class */ (function (_super) {
                                     profiles: []
                                 }];
                         }
-                        _b = {
-                            error: false,
-                            errorText: ""
-                        };
                         return [4 /*yield*/, this.profiles.get({ userId: userId })];
-                    case 2: return [2 /*return*/, (_b.profiles = _c.sent(),
-                            _b)];
+                    case 2:
+                        profiles = _b.sent();
+                        profiles = profiles.map(function (item) {
+                            item.img = item.img || "http://localhost/profile/static/images/image.png";
+                            return item;
+                        });
+                        return [2 /*return*/, {
+                                error: false,
+                                errorText: "",
+                                profiles: profiles
+                            }];
+                }
+            });
+        });
+    };
+    ProfilesApi.prototype.profile = function (_a) {
+        var body = _a.body;
+        return __awaiter(this, void 0, void 0, function () {
+            var profile, profiles;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        if (!body || !body.profile) {
+                            return [2 /*return*/, {
+                                    error: true,
+                                    errorText: "id профиля не задан!"
+                                }];
+                        }
+                        profile = body.profile;
+                        return [4 /*yield*/, this.profiles.get({ profile: profile })];
+                    case 1:
+                        profiles = _b.sent();
+                        profiles = profiles.map(function (item) {
+                            item.img = item.img || "http://localhost/profile/static/images/image.png";
+                            return item;
+                        });
+                        return [2 /*return*/, {
+                                error: false,
+                                errorText: "",
+                                profiles: profiles
+                            }];
                 }
             });
         });
@@ -125,8 +160,7 @@ var ProfilesApi = /** @class */ (function (_super) {
                         if (!userId) {
                             return [2 /*return*/, {
                                     error: true,
-                                    errorText: "Ошибка при проверке AccessToken",
-                                    profiles: []
+                                    errorText: "Ошибка при проверке AccessToken"
                                 }];
                         }
                         return [4 /*yield*/, this.profiles.get({ userId: userId })];
@@ -142,7 +176,7 @@ var ProfilesApi = /** @class */ (function (_super) {
                             error: false,
                             errorText: ""
                         };
-                        return [4 /*yield*/, this.profiles.set([{ userId: userId }])];
+                        return [4 /*yield*/, this.profiles.set([{ userId: userId, profile: userId }])];
                     case 3: return [2 /*return*/, (_b.result = _c.sent(),
                             _b)];
                 }
@@ -152,7 +186,7 @@ var ProfilesApi = /** @class */ (function (_super) {
     ProfilesApi.prototype.update = function (_a) {
         var body = _a.body;
         return __awaiter(this, void 0, void 0, function () {
-            var userId, fileName, dbSetObj, updateResult;
+            var userId, profiles, fileName, dbSetObj, updateResult;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -168,8 +202,25 @@ var ProfilesApi = /** @class */ (function (_super) {
                         if (!userId) {
                             return [2 /*return*/, {
                                     error: true,
-                                    errorText: "Ошибка при проверке AccessToken",
-                                    profiles: []
+                                    errorText: "Ошибка при проверке AccessToken"
+                                }];
+                        }
+                        if (!body.data.profile) {
+                            return [2 /*return*/, {
+                                    error: true,
+                                    errorText: 'Поле "id Профиля" обязательно для заполнения!'
+                                }];
+                        }
+                        return [4 /*yield*/, this.profiles.get({ profile: body.data.profile })];
+                    case 2:
+                        profiles = _b.sent();
+                        profiles = profiles.filter(function (item) {
+                            return !(item.userId === userId);
+                        });
+                        if (!profiles || !Array.isArray(profiles) || profiles.length) {
+                            return [2 /*return*/, {
+                                    error: true,
+                                    errorText: "Профиль с таким id уже существует!"
                                 }];
                         }
                         if (body.data.img) {
@@ -179,7 +230,7 @@ var ProfilesApi = /** @class */ (function (_super) {
                             fileName = "";
                         }
                         dbSetObj = {
-                            profile: body.data.profile || "",
+                            profile: body.data.profile,
                             name: body.data.name || "",
                             description: body.data.description || ""
                         };
@@ -189,7 +240,7 @@ var ProfilesApi = /** @class */ (function (_super) {
                         return [4 /*yield*/, this.profiles.update({ userId: userId }, {
                                 $set: dbSetObj
                             })];
-                    case 2:
+                    case 3:
                         updateResult = _b.sent();
                         return [2 /*return*/, {
                                 error: false,
